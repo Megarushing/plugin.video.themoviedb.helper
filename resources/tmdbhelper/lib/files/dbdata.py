@@ -4,6 +4,7 @@ from tmdbhelper.lib.addon.logger import kodi_log, TimerFunc
 from tmdbhelper.lib.addon.plugin import get_setting, get_version
 from tmdbhelper.lib.files.futils import FileUtils
 import sqlite3
+import sys
 
 
 DEFAULT_TABLE = 'simplecache'
@@ -71,7 +72,7 @@ class DatabaseCore:
         cursor.execute("PRAGMA synchronous=NORMAL")
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA foreign_keys=ON")
-        cursor.execute("PRAGMA mmap_size=268435456")
+        cursor.execute("PRAGMA mmap_size=%d" % (0 if sys.maxsize <= 2**32 else 268435456))  # 32-bit: no 256 MB map
         return connection
 
     def init_database(self):
