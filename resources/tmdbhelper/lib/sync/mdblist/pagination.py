@@ -154,7 +154,10 @@ class MDbListSyncCollectionSnapshot(MDbListSyncCollection):
             return
 
         page = self.sync_page_class(response, self.instance_datatype.get_data_list_by_type)
-        if not page.items and page.has_next_page:
+        try:  # Parse and validate here so a bad page fails the sync instead of raising out of sync_data
+            if not page.items and page.has_next_page:
+                return
+        except (AttributeError, KeyError, TypeError, ValueError):
             return
         return page
 
@@ -176,7 +179,7 @@ class MDbListSyncCollectionSnapshot(MDbListSyncCollection):
         data = []
         while not self.monitor.abortRequested():
             page = self.get_response_sync_page()
-            if page is None:
+            if page is None or self.monitor.abortRequested():
                 return
 
             data.extend(page.items)
