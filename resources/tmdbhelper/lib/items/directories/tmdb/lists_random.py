@@ -1,12 +1,12 @@
-import random
 import string
+from tmdbhelper.lib.addon.stablerandom import stable_random
 from tmdbhelper.lib.items.directories.tmdb.lists_discover import ListDiscover
 
 
 class ListRandomGenre(ListDiscover):
     def get_items(self, **kwargs):
         from tmdbhelper.lib.items.directories.tmdb.lists_allitems import ListGenres as ListAllGenres
-        item = random.choice(ListAllGenres(self.handle, self.paramstring).get_items(**kwargs))
+        item = stable_random(self.paramstring).choice(ListAllGenres(self.handle, self.paramstring).get_items(**kwargs))
         kwargs.update(item['params'])
         items = super().get_items(**kwargs)
         self.plugin_category = item['params']['plugin_category']
@@ -16,7 +16,7 @@ class ListRandomGenre(ListDiscover):
 class ListRandomProvider(ListDiscover):
     def get_items(self, **kwargs):
         from tmdbhelper.lib.items.directories.tmdb.lists_allitems import ListProviders as ListAllProviders
-        item = random.choice(ListAllProviders(self.handle, self.paramstring).get_items(**kwargs))
+        item = stable_random(self.paramstring).choice(ListAllProviders(self.handle, self.paramstring).get_items(**kwargs))
         kwargs.update(item['params'])
         items = super().get_items(**kwargs)
         self.plugin_category = item['params']['plugin_category']
@@ -26,7 +26,7 @@ class ListRandomProvider(ListDiscover):
 class ListRandomKeyword(ListDiscover):
     def get_items(self, **kwargs):
         from tmdbhelper.lib.items.directories.tmdb.lists_allitems import ListKeywords as ListAllKeywords
-        item = random.choice(ListAllKeywords(self.handle, self.paramstring).get_items())
+        item = stable_random(self.paramstring).choice(ListAllKeywords(self.handle, self.paramstring).get_items())
         kwargs.update(item['params'])
         items = super().get_items(**kwargs)
         self.plugin_category = string.capwords(item['params']['plugin_category'])
@@ -36,7 +36,7 @@ class ListRandomKeyword(ListDiscover):
 class ListRandomNetwork(ListDiscover):
     def get_items(self, **kwargs):
         from tmdbhelper.lib.items.directories.tmdb.lists_allitems import ListNetworks as ListAllNetworks
-        item = random.choice(ListAllNetworks(self.handle, self.paramstring).get_items())
+        item = stable_random(self.paramstring).choice(ListAllNetworks(self.handle, self.paramstring).get_items())
         kwargs.update(item['params'])
         items = super().get_items(**kwargs)
         self.plugin_category = string.capwords(item['params']['plugin_category'])
@@ -46,7 +46,7 @@ class ListRandomNetwork(ListDiscover):
 class ListRandomStudio(ListDiscover):
     def get_items(self, **kwargs):
         from tmdbhelper.lib.items.directories.tmdb.lists_allitems import ListStudios as ListAllStudios
-        item = random.choice(ListAllStudios(self.handle, self.paramstring).get_items())
+        item = stable_random(self.paramstring).choice(ListAllStudios(self.handle, self.paramstring).get_items())
         kwargs.update(item['params'])
         items = super().get_items(**kwargs)
         self.plugin_category = string.capwords(item['params']['plugin_category'])
