@@ -1,6 +1,7 @@
 import random
 from jurialmunkey.parser import try_int
 from jurialmunkey.ftools import cached_property
+from tmdbhelper.lib.addon.stablerandom import stable_random
 from tmdbhelper.lib.addon.plugin import get_setting, get_localized, convert_type
 from tmdbhelper.lib.items.directories.tmdb.lists_related import ListRecommendations
 from tmdbhelper.lib.items.directories.trakt.lists_sync import ListMostWatched, ListHistory
@@ -34,10 +35,11 @@ class ListTraktRandomisedProperties(ListTraktStandardProperties):
     def sample_limit(self):
         return min((self.pmax * 20), len(self.filtered_items))  # Make sure we dont try to sample more items than we have
 
+    rng = random
+
     @cached_property
     def sorted_items(self):
-        import random
-        return random.sample(self.filtered_items, self.sample_limit)
+        return self.rng.sample(self.filtered_items, self.sample_limit)
 
 
 class ListTraktRandomised(ListTraktStandard):
@@ -45,16 +47,20 @@ class ListTraktRandomised(ListTraktStandard):
     list_properties_class = ListTraktRandomisedProperties
     pagination = False
 
+    def configure_list_properties(self, list_properties):
+        list_properties = super().configure_list_properties(list_properties)
+        list_properties.rng = stable_random(self.paramstring)
+        return list_properties
+
     def get_items(self, *args, length=None, tmdb_type=None, **kwargs):
         length = try_int(length)
 
         if tmdb_type == 'both':
-            import random
             items = []
             items += super().get_items(*args, length=length, tmdb_type='movie', **kwargs) or []
             self.list_properties = self.configure_list_properties(self.list_properties_class())
             items += super().get_items(*args, length=length, tmdb_type='tv', **kwargs) or []
-            items = random.sample(items, self.list_properties.sample_limit)
+            items = stable_random(self.paramstring).sample(items, self.list_properties.sample_limit)
             self.plugin_category = self.list_properties.plugin_name.format(localized=self.list_properties.localized, plural=convert_type('both', 'plural'))
             self.container_content = convert_type('both', 'container', items=items)
             return items
@@ -89,7 +95,7 @@ class ListTraktStaticTrendingRandomised(ListTraktCustom):
         items = [i for i in self.sample_class(-1, 'nextpage=false').get_items(tmdb_type='both') or () if i and i.get('params')]
         if not items:
             return []
-        return super().get_items(**random.choice(items)['params'])
+        return super().get_items(**stable_random(self.paramstring).choice(items)['params'])
 
 
 class ListTraktStaticPopularRandomised(ListTraktStaticTrendingRandomised):
@@ -119,7 +125,7 @@ class ListRandomBecauseYouWatched(ListRecommendations):
         limit = get_setting('trakt_becausewatchedseed', 'int') or 5
         watched_items = watched_items[:limit]
 
-        item = watched_items[random.randint(0, len(watched_items) - 1)]
+        item = stable_random(self.paramstring).choice(watched_items)
 
         try:
             label = item['label']
