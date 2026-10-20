@@ -1,3 +1,5 @@
+import sys
+from copy import copy
 from jurialmunkey.ftools import cached_property
 from tmdbhelper.lib.addon.plugin import executebuiltin, format_folderpath
 from tmdbhelper.lib.addon.logger import kodi_log
@@ -163,11 +165,18 @@ class PlayerResolverNone(PlayerResolverBase):
 
     @cached_property
     def listitem(self):
-        self.player.item.details.params = {}
-        self.player.item.details.path = self.path
-        self.player.item.details.infoproperties['isPlayable'] = 'false' if self.is_folder else 'true'
-        self.player.item.details.infoproperties['is_folder'] = 'true' if self.is_folder else 'false'
-        return self.player.item.details.get_listitem()
+        details = copy(self.player.item.details)
+        details.infoproperties = dict(details.infoproperties)
+        details.params = {}
+        details.path = self.path
+        details.__dict__.pop('url', None)
+        details.infoproperties['isPlayable'] = 'false' if self.is_folder else 'true'
+        details.infoproperties['is_folder'] = 'true' if self.is_folder else 'false'
+        if len(sys.argv) > 3 and sys.argv[3].lower() == 'resume:false':
+            # A resolved resume point forces Kodi to resume, overriding its user's choice (#1482).
+            details.infoproperties.pop('ResumeTime', None)
+            details.infoproperties.pop('TotalTime', None)
+        return details.get_listitem()
 
     @cached_property
     def next_episodes(self):
