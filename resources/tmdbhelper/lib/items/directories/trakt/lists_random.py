@@ -95,7 +95,9 @@ class ListTraktStaticTrendingRandomised(ListTraktCustom):
         items = [i for i in self.sample_class(-1, 'nextpage=false').get_items(tmdb_type='both') or () if i and i.get('params')]
         if not items:
             return []
-        return super().get_items(**stable_random(self.paramstring).choice(items)['params'])
+        # Keep the requested page/options when delegating to the selected list.
+        kwargs.update(stable_random(self.paramstring).choice(items)['params'])
+        return super().get_items(**kwargs)
 
 
 class ListTraktStaticPopularRandomised(ListTraktStaticTrendingRandomised):
