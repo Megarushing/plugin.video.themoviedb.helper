@@ -1,7 +1,7 @@
 import random
 from jurialmunkey.parser import try_int
 from jurialmunkey.ftools import cached_property
-from tmdbhelper.lib.addon.stablerandom import stable_random
+from tmdbhelper.lib.addon.stablerandom import stable_random, stable_list_choice
 from tmdbhelper.lib.addon.plugin import get_setting, get_localized, convert_type
 from tmdbhelper.lib.items.directories.tmdb.lists_related import ListRecommendations
 from tmdbhelper.lib.items.directories.trakt.lists_sync import ListMostWatched, ListHistory
@@ -96,7 +96,7 @@ class ListTraktStaticTrendingRandomised(ListTraktCustom):
         if not items:
             return []
         # Keep the requested page/options when delegating to the selected list.
-        kwargs.update(stable_random(self.paramstring).choice(items)['params'])
+        kwargs.update(stable_list_choice(self.paramstring, items)['params'])
         return super().get_items(**kwargs)
 
 

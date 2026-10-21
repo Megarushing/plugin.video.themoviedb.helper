@@ -20,6 +20,41 @@ def pick(paramstring, day='2026-10-20'):
     return stable_random(paramstring, day=day).choice(CHOICES)
 
 
+class RandomListSlotsTest(unittest.TestCase):
+    def setUp(self):
+        self.items = [{'params': {'user_slug': 'owner', 'list_slug': str(i)}} for i in range(8)]
+        self.base = 'info=random_likedlists&tmdb_type=both&hub=123'
+
+    def choose(self, slot, items=None, suffix='', day='2026-10-21'):
+        return stablerandom.stable_list_choice(
+            self.base + '&random_slot=' + str(slot) + suffix,
+            self.items if items is None else items, day=day)['params']['list_slug']
+
+    def test_three_slots_are_distinct(self):
+        self.assertEqual(len({self.choose(i) for i in (1, 2, 3)}), 3)
+
+    def test_each_slot_survives_refresh_pagination_and_pool_reordering(self):
+        for slot in (1, 2, 3):
+            self.assertEqual(self.choose(slot), self.choose(
+                slot, list(reversed(self.items)), '&page=3&reload=99&plugin_category=Title&widget=true'))
+
+    def test_duplicate_pool_entries_cannot_duplicate_slots(self):
+        pool = self.items + self.items
+        self.assertEqual(len({self.choose(i, pool) for i in (1, 2, 3)}), 3)
+
+    def test_small_pool_cycles_without_error(self):
+        self.assertEqual(self.choose(1, self.items[:1]), self.choose(3, self.items[:1]))
+
+    def test_no_slot_preserves_existing_selection(self):
+        expected = stable_random(self.base, day='2026-10-21').choice(self.items)
+        self.assertEqual(stablerandom.stable_list_choice(self.base, self.items, day='2026-10-21'), expected)
+
+    def test_bad_slot_falls_back_to_legacy(self):
+        for slot in ('bad', '0', '-1'):
+            self.assertEqual(self.choose(slot), stablerandom.stable_list_choice(
+                self.base, self.items, day='2026-10-21')['params']['list_slug'])
+
+
 class StableRandomTest(unittest.TestCase):
     def test_refresh_keeps_pick(self):
         self.assertEqual(pick(WIDGET), pick(REFRESHED))

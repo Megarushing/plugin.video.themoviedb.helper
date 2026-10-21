@@ -24,9 +24,7 @@ class SampleLists:
         return [{'params': dict(self.params)}]
 
 
-class FixedChoice:
-    def choice(self, items):
-        return items[0]
+from test_stable_random import stablerandom
 
 
 def make_wrapper():
@@ -34,7 +32,7 @@ def make_wrapper():
     node = next(n for n in tree.body if isinstance(n, ast.ClassDef)
                 and n.name == 'ListTraktStaticTrendingRandomised')
     namespace = {'ListTraktCustom': CustomList, 'ListTraktStaticTrending': SampleLists,
-                 'stable_random': lambda _: FixedChoice()}
+                 'stable_list_choice': stablerandom.stable_list_choice}
     exec(compile(ast.Module(body=[node], type_ignores=[]), str(SOURCE), 'exec'), namespace)
     wrapper = namespace[node.name]()
     wrapper.paramstring = 'info=random_likedlists&page=2'
@@ -59,6 +57,25 @@ class RandomListPaginationTest(unittest.TestCase):
         self.assertEqual(result['sort_by'], 'rank')
         self.assertEqual(result['sort_how'], 'asc')
         self.assertEqual(result['cacheonly'], 'False')
+
+    def test_real_wrapper_keeps_slot_identity_and_page(self):
+        class ManyLists(SampleLists):
+            def get_items(self, **kwargs):
+                return [{'params': dict(self.params, list_slug=str(i))} for i in range(8)]
+        picks = []
+        for slot in (1, 2, 3):
+            pages = []
+            for page in (1, 2, 3):
+                wrapper = make_wrapper()
+                wrapper.sample_class = ManyLists
+                wrapper.paramstring = f'info=random_likedlists&random_slot={slot}&page={page}'
+                result = wrapper.get_items(page=page, random_slot=str(slot))
+                self.assertEqual(result['page'], page)
+                self.assertEqual(result['random_slot'], str(slot))
+                pages.append(result['list_slug'])
+            self.assertEqual(len(set(pages)), 1)
+            picks.append(pages[0])
+        self.assertEqual(len(set(picks)), 3)
 
     def test_empty_random_list_pool_still_returns_empty(self):
         class EmptyLists(SampleLists):
