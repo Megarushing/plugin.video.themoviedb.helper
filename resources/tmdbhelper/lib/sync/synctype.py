@@ -22,6 +22,8 @@ def SyncHiddenCalendar():
 
 
 def SyncHiddenDropped():
+    if get_setting('sync_source_watched', 'str') == 'MDbList':
+        return mdblist_synctype.SyncHiddenDropped
     return trakt_synctype.SyncHiddenDropped
 
 
@@ -52,7 +54,7 @@ def SyncCollection():
 
 
 def SyncPlayback():
-    if get_setting('sync_source_playback', 'str') == 'MDbList':
+    if get_setting('sync_source_watched', 'str') == 'MDbList':
         return mdblist_synctype.SyncPlayback
     return trakt_synctype.SyncPlayback
 
@@ -71,5 +73,5 @@ def SyncWatched():
 
 def SyncAiredEpisodes():
     if get_setting('sync_source_watched', 'str') == 'MDbList':
-        return SyncNextEpisodes()  # AIRED/WATCHED counts in next episodes for MDbList
+        return SyncNextEpisodes()  # Aired counts in next episodes for MDbList
     return SyncWatched()

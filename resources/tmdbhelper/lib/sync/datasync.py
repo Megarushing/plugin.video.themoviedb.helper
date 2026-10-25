@@ -131,14 +131,22 @@ class SyncDataGetterDroppedCalendarUnHidden(SyncDataGetterAll):
     query_clauses = ('item_type=?', 'dropped_hidden_at IS NULL AND calendar_hidden_at IS NULL', )
 
 
-class SyncDataGetterAllUnHiddenMoviesToWatch(SyncDataGetterProgressWatchedUnHidden):
+class SyncDataGetterAllMoviesToWatch(SyncDataGetterAll):
     query_values = ('movie', )
     clause_keys = ('playback_progress', 'watchlist_listed_at', )
+    filter_keys = ()
+
+    def get_keys(self):
+        return (*super().get_keys(), *self.filter_keys, )
 
 
-class SyncDataGetterAllUnHiddenShowsToWatch(SyncDataGetterDroppedWatchedUnHidden):
+class SyncDataGetterAllShowsToWatch(SyncDataGetterAll):
     query_values = ('show', )
     clause_keys = ('next_episode_id', 'watchlist_listed_at', )
+    filter_keys = ()
+
+    def get_keys(self):
+        return (*super().get_keys(), *self.filter_keys, )
 
 
 class SyncDataGetterAllUnHiddenShowsStarted(SyncDataGetterDroppedWatchedUnHidden):
@@ -154,6 +162,12 @@ class SyncDataGetterAllUnHiddenShowsNextEpisode(SyncDataGetterDroppedWatchedUnHi
 class SyncDataGetterAllUnHiddenEpisodesUpNext(SyncDataGetterDroppedWatchedUnHidden):  # TODO: UNSURE ABOUT THIS ONE
     query_values = ('episode', )
     clause_keys = ('upnext_episode_id', )
+
+
+class SyncDataGetterAllEpisodePlaycounts(SyncDataGetterAll):
+    query_values = ('episode', )
+    clause_keys = ('plays', )
+    base_keys = ('id', )
 
 
 class SyncDataGetterAllItems(SyncDataGetterAll):
@@ -276,6 +290,24 @@ class SyncDataGetterUnHiddenShowEpisodesUpNext(SyncDataGetterDroppedWatchedUnHid
         return ('episode', self.tmdb_id, )
 
 
+def SyncDataGetterAllUnHiddenMoviesToWatch(instance_syncdata):
+    from tmdbhelper.lib.addon.plugin import get_setting
+    if get_setting('sync_source_watched', 'str') == 'MDbList':
+        from tmdbhelper.lib.sync.mdblist.datasync import MDbListSyncDataGetterAllUnHiddenMoviesToWatch
+        return MDbListSyncDataGetterAllUnHiddenMoviesToWatch(instance_syncdata)
+    from tmdbhelper.lib.sync.trakt.datasync import TraktSyncDataGetterAllUnHiddenMoviesToWatch
+    return TraktSyncDataGetterAllUnHiddenMoviesToWatch(instance_syncdata)
+
+
+def SyncDataGetterAllUnHiddenShowsToWatch(instance_syncdata):
+    from tmdbhelper.lib.addon.plugin import get_setting
+    if get_setting('sync_source_watched', 'str') == 'MDbList':
+        from tmdbhelper.lib.sync.mdblist.datasync import MDbListSyncDataGetterAllUnHiddenShowsToWatch
+        return MDbListSyncDataGetterAllUnHiddenShowsToWatch(instance_syncdata)
+    from tmdbhelper.lib.sync.trakt.datasync import TraktSyncDataGetterAllUnHiddenShowsToWatch
+    return TraktSyncDataGetterAllUnHiddenShowsToWatch(instance_syncdata)
+
+
 def SyncDataGetterAllUnHiddenShowsInProgress(instance_syncdata):
     from tmdbhelper.lib.addon.plugin import get_setting
     if get_setting('sync_source_watched', 'str') == 'MDbList':
@@ -302,6 +334,9 @@ class SyncDataGetters:
 
     def get_all_unhidden_episodes_upnext_getter(self):
         return SyncDataGetterAllUnHiddenEpisodesUpNext(self)
+
+    def get_all_episode_playcounts_getter(self):
+        return SyncDataGetterAllEpisodePlaycounts(self)
 
     def get_all_unhidden_shows_inprogress_getter(self):
         return SyncDataGetterAllUnHiddenShowsInProgress(self)
@@ -424,12 +459,12 @@ class SyncData(SyncDataGetters):
         return name
 
     @has_arg_value(0, ('tv', 'movie', ))
-    def get_values(self, tmdb_type, tmdb_id, season=None, episode=None, keys=None):
-        self.sync('show' if tmdb_type == 'tv' else 'movie', keys)
+    def get_values(self, tmdb_type, tmdb_id, season=None, episode=None, keys=None, item_type=None):
+        self.sync(item_type or ('show' if tmdb_type == 'tv' else 'movie'), keys)
         return self.cache.get_values(item_id=self.get_name(tmdb_type, tmdb_id, season, episode), keys=keys)
 
-    def get_value(self, tmdb_type, tmdb_id, season=None, episode=None, key=None):
-        data = self.get_values(tmdb_type, tmdb_id, season, episode, keys=(key,))
+    def get_value(self, tmdb_type, tmdb_id, season=None, episode=None, key=None, item_type=None):
+        data = self.get_values(tmdb_type, tmdb_id, season, episode, keys=(key,), item_type=item_type)
         return data[0] if data else None
 
     def sync(self, item_type, keys, forced=False):

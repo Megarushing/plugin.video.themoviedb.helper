@@ -71,7 +71,7 @@ class TraktDiscoverGenres(DiscoverMulti):
 class TraktDiscoverSubgenres(TraktDiscoverGenres):
     idx = None
     key = 'subgenres'
-    label_prefix_localized = 32546
+    label_prefix_localized = 32547
 
     @staticmethod
     def get_subgenres(genres):
@@ -204,17 +204,7 @@ class TraktDiscoverMain(DiscoverMain):
     file = NODE_FILENAME
     winprop = 'TraktDiscover.Path'
 
-    def load_values(self, tmdb_type='movie', use_winprops=False, **kwargs):
-        # Skin callers opt in to reopening their current filters without passing
-        # a second `info` query argument that would replace the editor route.
-        if use_winprops in (True, 'true', 'True'):
-            from urllib.parse import parse_qsl
-            from jurialmunkey.window import get_property
-            saved = dict(parse_qsl(get_property(f'{self.winprop}.paramstring')))
-            tmdb_type = saved.pop('tmdb_type', tmdb_type)
-            if 'info' in saved:
-                saved['list'] = saved.pop('info')
-            kwargs.update(saved)
+    def load_values(self, tmdb_type='movie', **kwargs):
         self.routes_dict['tmdb_type'].load_value(tmdb_type)  # Set TMDb Type first as other values depend on it
         super().load_values(**kwargs)
 
