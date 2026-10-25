@@ -46,7 +46,7 @@ class Tvshow(MediaItem):
 
     def get_previous_season_episode_count(self, season):
         return sum(
-            i['episode_count']
+            i['episode_count'] or 0  # TMDb can return a season without an episode count
             for i in self.return_basemeta_db('season_episode_counts').cached_data
             if i['season'] < season
         )
