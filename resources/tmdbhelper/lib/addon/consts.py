@@ -164,6 +164,9 @@ ROUTE_NOID = {
     'trakt_history': {'route': {
         'module_name': 'tmdbhelper.lib.items.directories.trakt.lists_sync',
         'import_attr': 'ListHistory'}},
+    'trakt_activity': {'route': {
+        'module_name': 'tmdbhelper.lib.items.directories.trakt.lists_sync',
+        'import_attr': 'ListActivity'}},
     'trakt_history_stats': {'route': {
         'module_name': 'tmdbhelper.lib.items.directories.trakt.lists_stats',
         'import_attr': 'ListHistoryStats'}},

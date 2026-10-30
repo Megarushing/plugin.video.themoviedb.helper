@@ -264,6 +264,38 @@ class ItemListSyncDataInProgress(ItemListSyncData):
         return [self.make_item(i) for i in self.sort_data(data) if i]
 
 
+class ItemListSyncDataActivity(ItemListSyncData):
+    """ Movies and shows by latest activity: finished or stopped part-way (an episode's resume point counts for its show) """
+
+    def get_activity_sources(self, item_type):
+        playback_type = 'episode' if item_type == 'show' else item_type
+        return (
+            (self.syncdata.get_all_watched_getter(item_type), 'last_watched_at', ),
+            (self.syncdata.get_all_playback_getter(playback_type), 'playback_paused_at', ), )
+
+    def get_latest_activity(self):
+        latest = {}  # (mediatype, tmdb_id): [activity_at, title]
+        for item_type in self.item_types:
+            for sd, key in self.get_activity_sources(item_type):
+                sd.additional_keys = (key, )
+                for i in sd.items or ():
+                    if not i[key]:
+                        continue
+                    k = (item_type, i['tmdb_id'], )
+                    row = latest.setdefault(k, [i[key], i['title']])
+                    row[0] = max(row[0], i[key])
+                    if key == 'last_watched_at':  # Episode rows carry the episode title so prefer the parent title
+                        row[1] = i['title']
+        return latest
+
+    def get_items(self):
+        latest = self.get_latest_activity()
+        if not latest:
+            return
+        ordered = sorted(latest.items(), key=lambda x: x[1][0], reverse=self.sort_how != 'asc')
+        return [{'id': tmdb_id, 'mediatype': mediatype, 'title': title} for (mediatype, tmdb_id), (_, title) in ordered]
+
+
 class ItemListSyncDataNextUp(ItemListSyncData):
     """ Episodes next up to watch for all inprogress shows """
     sort_method = ('last_watched_at', True, '', )
@@ -359,6 +391,7 @@ def ItemListSyncDataFactory(sync_type, *args, **kwargs):
         'inprogress': ItemListSyncDataInProgress,
         'towatch': ItemListSyncDataToWatch,
         'unwatchedplayback': ItemListSyncDataUnwatchedPlayback,
+        'activity': ItemListSyncDataActivity,
     }
 
     return routes[sync_type](*args, **kwargs)

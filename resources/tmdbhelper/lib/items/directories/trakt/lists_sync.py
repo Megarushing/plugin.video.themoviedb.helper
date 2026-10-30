@@ -126,6 +126,16 @@ class ListHistory(ListStandardSync):
         return list_properties
 
 
+class ListActivity(ListStandardSync):
+    def configure_list_properties(self, list_properties):
+        list_properties = super().configure_list_properties(list_properties)
+        list_properties.sync_type = 'activity'
+        list_properties.sort_how = 'desc'
+        list_properties.localize = 32194
+        list_properties.plugin_name = '{localized} {plural}'
+        return list_properties
+
+
 class ListMostWatched(ListStandardSync):
     def configure_list_properties(self, list_properties):
         list_properties = super().configure_list_properties(list_properties)
