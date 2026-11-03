@@ -380,7 +380,7 @@ class ListProviders(ContainerDirectory):
         return ProviderArtwork().fanart
 
     def get_items(self, tmdb_type, **kwargs):
-        items = self.query_database.get_watch_providers(tmdb_type, self.tmdb_api.iso_country, allowlist_only=True)
+        items = self.query_database.get_watch_providers(tmdb_type, self.tmdb_api.iso_watch_region, allowlist_only=True)
         items = [ItemProviders(**i, provider_artwork=self.provider_artwork).item for i in items]
         self.kodi_db = None
         self.container_content = ''

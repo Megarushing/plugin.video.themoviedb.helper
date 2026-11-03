@@ -203,7 +203,7 @@ class Provider(ItemDetailsList):
 
     @property
     def values(self):  # WHERE conditions values for ?
-        return (self.item_id, self.common_apis.tmdb_api.iso_country)
+        return (self.item_id, self.common_apis.tmdb_api.iso_watch_region)
 
     def image_path_func(self, v):
         return self.common_apis.tmdb_imagepath.get_imagepath_thumbs(v)
