@@ -2417,6 +2417,16 @@ msgctxt "#32547"
 msgid "Subgenres"
 msgstr ""
 
+#: /resources/settings.xml
+msgctxt "#32548"
+msgid "Provider region"
+msgstr ""
+
+#: /resources/settings.xml
+msgctxt "#32549"
+msgid "Two-letter country code (e.g. PT) for where-to-watch providers and provider players. Empty uses the language country."
+msgstr ""
+
 msgctxt "#30030"
 msgid "Hindi (India)"
 msgstr ""

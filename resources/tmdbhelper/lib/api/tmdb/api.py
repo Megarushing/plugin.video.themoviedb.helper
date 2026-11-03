@@ -140,6 +140,13 @@ class TMDb(TMDbAPI):
         if not self.setting_ignore_regionreleasefilter:
             return self.iso_country
 
+    @cached_property
+    def iso_watch_region(self):
+        return self.get_iso_watch_region()
+
+    def get_iso_watch_region(self):
+        return get_setting('provider_region', 'str').strip().upper() or self.iso_country
+
     @property
     def setting_ignore_regionreleasefilter(self):
         try:

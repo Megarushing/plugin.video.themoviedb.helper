@@ -93,6 +93,16 @@
                         <heading>32005</heading>
                     </control>
                 </setting>
+                <setting id="provider_region" type="string" label="32548" help="32549">
+                    <level>0</level>
+                    <default></default>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control type="edit" format="string">
+                        <heading>32548</heading>
+                    </control>
+                </setting>
                 <setting id="ignore_regionreleasefilter" type="boolean" label="32449" help="">
                     <level>0</level>
                     <default>false</default>
