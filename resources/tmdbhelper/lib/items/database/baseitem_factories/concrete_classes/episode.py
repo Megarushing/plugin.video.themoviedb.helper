@@ -54,6 +54,14 @@ class Episode(Season):
             return
         return base_dbc.data
 
+    @cached_property
+    def routes_basemeta_db(self):
+        return self.get_routes_basemeta_db()
+
+    def get_routes_basemeta_db(self):
+        # TMDb has no per-episode watch providers: an episode streams wherever its show does
+        return {**super().routes_basemeta_db, 'basemeta_db_provider': self.config_basemeta_db_tvshow}
+
     @property
     def item_id(self):
         return self.get_episode_id(self.tmdb_type, self.tmdb_id, self.season, self.episode)
