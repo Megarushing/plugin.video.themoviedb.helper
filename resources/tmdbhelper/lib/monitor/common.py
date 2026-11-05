@@ -37,14 +37,15 @@ class CommonMonitorDetails(CommonContainerAPIs):
         )
 
     @kodi_try_except('lib.monitor.common get_tmdb_id_parent')
-    def get_tmdb_id_parent(self, tmdb_id, item_type, season=None, episode=None):
-        return self.query_database.get_trakt_id(
-            id_value=tmdb_id,
-            id_type='tmdb',
-            item_type=item_type,
-            output_type='tmdb',
+    def get_tmdb_id_parent(self, tmdb_id, item_type, season=None, episode=None, imdb_id=None, tvdb_id=None):
+        if item_type != 'episode':
+            return tmdb_id
+        return self.query_database.get_episode_parent_id(
+            tmdb_id=tmdb_id,
             season=season,
-            episode=episode
+            episode=episode,
+            imdb_id=imdb_id,
+            tvdb_id=tvdb_id,
         )
 
     @kodi_try_except('lib.monitor.common get_identifier_details')
@@ -60,14 +61,14 @@ class CommonMonitorDetails(CommonContainerAPIs):
         return self.query_database.del_identifier(identifier)
 
     @cached_property
-    def all_awards(self):
-        return CommonRatingsAPIs.get_awards_data()
+    def awards_database(self):
+        return CommonRatingsAPIs.get_awards_database()
 
     def get_all_ratings(self, tmdb_type, tmdb_id, season=None, episode=None):
         ratings_api = CommonRatingsAPIs()
 
-        # Reuse awards to avoid rescraping
-        ratings_api.all_awards = self.all_awards
+        # Reuse the reader; each lookup opens its own read-only connection.
+        ratings_api.awards_database = self.awards_database
 
         # Set defaults
         ratings_api.tmdb_type = tmdb_type
@@ -78,11 +79,7 @@ class CommonMonitorDetails(CommonContainerAPIs):
         # Reuse some APIs to avoid reinit
         ratings_api.tmdb_api = self.tmdb_api
         ratings_api.tmdb_imagepath = self.tmdb_imagepath
-        ratings_api.trakt_api = self.trakt_api
         ratings_api.ftv_api = self.ftv_api
-        ratings_api.tvdb_api = self.tvdb_api
-        ratings_api.mdblist_api = self.mdblist_api
-        ratings_api.omdb_api = self.omdb_api
         ratings_api.query_database = self.query_database
 
         return ratings_api.all_ratings
@@ -173,10 +170,17 @@ class CommonMonitorItem:
 
             self.set_property(k, v)
 
+    def set_rating_property(self):
+        rating = self.infolabels.get('rating')
+        if rating is None:
+            return
+        self.set_property('rating', f'{rating:.1f}')
+
     def set_properties(self):
         self.set_info_properties(self.art)
         self.set_info_properties(self.unique_ids, affix='id')
         self.set_single_property('premiered', self.infoproperties)  # Set Premiered first from infoproperties to ensure correct formatting for shortdate
+        self.set_rating_property()
         self.set_info_properties(self.infolabels)
         self.set_info_properties(self.infoproperties)
 

@@ -3,6 +3,17 @@
 These guidelines apply throughout this repository. Match the existing architecture
 when adding or extending functionality.
 
+## Commit messages
+
+- Prefix every commit subject with an appropriate emoji shortcode, matching the
+  existing history (for example, `:bug:` for fixes, `:sparkles:` for new features,
+  `:zap:` for improvements, `:bookmark:` for version bumps, and `:robot:` for
+  agent instructions).
+- Follow the shortcode with a space and a concise description of the change.
+- Commit messages are always a single line: the emoji shortcode and the
+  description only. Never add a body, bullet points, extended description,
+  `Co-Authored-By` or other attribution trailers, or any other lines.
+
 ## Agree on the approach before implementation
 
 - Before implementing changes involving item data, database access, or sync,
@@ -13,13 +24,11 @@ when adding or extending functionality.
   to use, and an existing implementation that demonstrates the relevant pattern.
   Explain how the proposal follows these conventions; proximity alone does not
   make an existing implementation an appropriate reference.
-- Ask the user to approve the proposed approach and wait for their response
-  before implementation. Raise architectural questions early, with a recommended
-  option and meaningful alternatives where applicable. Read-only investigation
-  may continue while awaiting approval.
-- Once approved, keep implementation within the agreed responsibilities and
-  patterns. Routine details within that approach do not need repeated approval.
-  If new findings require changing the owning layer, shared abstraction, or
+- Raise architectural questions early, with a recommended
+  option and meaningful alternatives where applicable.
+- Keep implementation within the agreed responsibilities and
+  patterns.
+- If new findings require changing the owning layer, shared abstraction, or
   agreed pattern, explain the proposed revision and obtain approval before
   implementing that deviation.
 
@@ -56,6 +65,13 @@ several layers, each retaining its own responsibility.
 
 ## Organization and reuse
 
+- Prefer hanging indents for continuation lines over vertical alignment with
+  the opening delimiter. Follow PEP 8's hanging-indent guidance:
+  put no arguments on the first line and indent continuation lines to clearly
+  distinguish them from the surrounding code. Use an extra indentation level
+  to distinguish continued function parameters from the body.
+- Always use explicitly named absolute imports. Relative imports and wildcard
+  (`from ... import *`) imports are not permitted.
 - Keep a distinct feature in its own appropriately named modules.
 - Update routes in `addon/consts.py` and all imports when moving or renaming
   classes or modules. Remove unused imports and obsolete references.

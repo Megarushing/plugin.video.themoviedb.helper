@@ -5,11 +5,43 @@ from tmdbhelper.lib.script.method.decorators import is_in_kwargs, get_tmdb_id
 from tmdbhelper.lib.addon.plugin import get_localized
 
 
+def get_tmdb_authenticator():
+    from tmdbhelper.lib.api.tmdb.api import TMDb
+    from tmdbhelper.lib.api.tmdb.users import TMDbUser
+    return TMDbUser(api_key=TMDb.api_key).authenticator
+
+
+def reopen_tmdb_settings():
+    from tmdbhelper.lib.addon.plugin import get_setting
+    from tmdbhelper.lib.addon.settings import AddonSettingsDialog
+    label = 32169 if get_setting('tmdb_user_token', 'str') else 32010
+    AddonSettingsDialog(32017, label).reopen()
+
+
+def authenticate_tmdb(return_settings=False, **kwargs):
+    try:
+        return get_tmdb_authenticator().authorised_access
+    finally:
+        if return_settings:
+            reopen_tmdb_settings()
+
+
+def revoke_tmdb(return_settings=False, **kwargs):
+    try:
+        return get_tmdb_authenticator().revoke_login()
+    finally:
+        if return_settings:
+            reopen_tmdb_settings()
+
+
 @is_in_kwargs({'tmdb_type': ['movie', 'tv']})
 @get_tmdb_id
 def sync_tmdb(tmdb_type=None, tmdb_id=None, season=None, episode=None, sync_type=None, **kwargs):
-    """ Open sync trakt menu for item """
-    from tmdbhelper.lib.script.sync.tmdb.menu import sync_item
+    """Compatibility entry point for TMDb actions in Sync Options."""
+    from tmdbhelper.lib.script.sync.menu_default import sync_item
+    sync_type = {
+        'favorite': 'tmdbfavorites', 'userlist': 'tmdbuserlist', 'rating': 'tmdbrating',
+    }.get(sync_type, sync_type)
     sync_item(tmdb_type=tmdb_type, tmdb_id=tmdb_id, season=season, episode=episode, sync_type=sync_type)
 
 
@@ -28,6 +60,7 @@ def refresh_item(tmdb_type, tmdb_id, season=None, episode=None, **kwargs):
         sync.episode = episode
         sync.cache_refresh = 'force'
         sync.cache_translations = True
+        sync.clear_user_art = True
         sync.data
 
     with BusyDialog():
@@ -60,7 +93,7 @@ def delete_itemtype(mediatype=None, confirmation=True, **kwargs):
         },
         'all': {
             'baseitems': ('person', 'tvshow', 'season', 'episode', 'movie', 'collection', ),
-            'tables': (),
+            'tables': ('user_art', ),
         },
     }
 
@@ -96,6 +129,11 @@ def delete_itemtype(mediatype=None, confirmation=True, **kwargs):
             for i in routes[mediatype]['baseitems']:
                 statement = f'DELETE FROM baseitem WHERE mediatype="{i}"'
                 progress_dialog.update(statement)
+                database.del_list_values(
+                    table='user_art',
+                    values=(i, ),
+                    conditions='parent_id IN (SELECT id FROM baseitem WHERE mediatype=?)',
+                )
                 database.execute_sql(statement)
             for i in routes[mediatype]['tables']:
                 statement = f'DELETE FROM {i}'
