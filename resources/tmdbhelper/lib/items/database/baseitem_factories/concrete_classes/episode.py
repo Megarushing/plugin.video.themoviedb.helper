@@ -1,5 +1,6 @@
 from tmdbhelper.lib.items.database.baseitem_factories.concrete_classes.season import Season
 from tmdbhelper.lib.items.database.baseitem_factories.concrete_classes.tvshow import Tvshow
+from jurialmunkey.ftools import cached_property
 
 
 class Episode(Season):
