@@ -139,7 +139,7 @@ class ProviderArtwork(GenreArtwork):
     tmdb_type = 'provider'
 
     def __init__(self):
-        self.iso_country = self.query_database.tmdb_api.iso_country
+        self.iso_country = self.query_database.tmdb_api.iso_watch_region  # Provider region setting
 
     @cached_property
     def items_movie(self):

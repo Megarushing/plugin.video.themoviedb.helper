@@ -14,7 +14,7 @@ def configure_provider_allowlist():
         available_providers = set()
         for tmdb_type in ['movie', 'tv']:
 
-            data = FindQueriesDatabase().get_watch_providers(tmdb_type, tmdb_api.iso_country)
+            data = FindQueriesDatabase().get_watch_providers(tmdb_type, tmdb_api.iso_watch_region)
             if not data:
                 continue
             available_providers |= {i.get('provider_name') for i in data}

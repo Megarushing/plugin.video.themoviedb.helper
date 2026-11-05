@@ -72,3 +72,29 @@ class BecauseYouWatchedStablePick(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+
+class ProviderRegionEverywhere(unittest.TestCase):
+    def test_no_watch_provider_lookup_uses_the_language_country(self):
+        offenders = []
+        for path in (ROOT / 'resources/tmdbhelper').rglob('*.py'):
+            for n, line in enumerate(path.read_text().splitlines(), 1):
+                if 'tmdb_api.iso_country' in line and ('get_watch_providers(' in line or 'ProviderArtwork' in path.name):
+                    offenders.append(f'{path.relative_to(ROOT)}:{n}')
+        self.assertEqual(offenders, [])
+        art = (ROOT / 'resources/tmdbhelper/lib/script/method/image_functions.py').read_text()
+        self.assertIn('self.iso_country = self.query_database.tmdb_api.iso_watch_region', art)
+
+
+class UniqueIds(unittest.TestCase):
+    def get_unique_ids(self, item):
+        src = (ROOT / 'resources/tmdbhelper/lib/items/itemlist.py').read_text()
+        tree = ast.parse(src)
+        fn = next(n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef) and n.name == 'get_unique_ids')
+        ns = {}
+        exec(compile(ast.Module(body=[fn], type_ignores=[]), 'itemlist', 'exec'), ns)
+        return ns['get_unique_ids'](type('S', (), {'item': item})())
+
+    def test_missing_imdb_id_is_not_set(self):
+        self.assertEqual(self.get_unique_ids({'id': 5, 'imdb_id': None}), {'tmdb': 5})
+        self.assertEqual(self.get_unique_ids({'id': 5, 'imdb_id': 'tt1'}), {'tmdb': 5, 'imdb': 'tt1'})

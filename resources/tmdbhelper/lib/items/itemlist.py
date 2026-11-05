@@ -46,7 +46,8 @@ class ItemMappingBasic(ItemMapping):
     def get_unique_ids(self, unique_ids=None):
         unique_ids = unique_ids or {}
         unique_ids['tmdb'] = self.item.get('id')
-        unique_ids['imdb'] = self.item.get('imdb_id')
+        if self.item.get('imdb_id'):  # A None here overwrote the real tt id from details and became the text 'None'
+            unique_ids['imdb'] = self.item.get('imdb_id')
         return unique_ids
 
     def get_infolabels(self, infolabels=None):
