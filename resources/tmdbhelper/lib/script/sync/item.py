@@ -322,6 +322,9 @@ class ItemSync:
     def display_dialog(self):
         if not self.dialog_message:
             return
+        if self.is_successful_sync:  # Success = toast; only a failure needs the OK box
+            Dialog().notification(self.dialog_header, self.dialog_message.split('\n')[0])
+            return
         Dialog().ok(self.dialog_header, self.dialog_message)
 
     def sync(self):
